@@ -117,14 +117,7 @@ public class TaskServiceImpl implements TaskService {
                 .getService();
         BlobId blobId = BlobId.of(bucketName, fileName);
         Blob blob = storage.get(blobId);
-       /* String filePath = Paths.get("").toAbsolutePath().toString() + "/"+fileName;
-        try (FileOutputStream fos = new FileOutputStream(filePath)) {
-            fos.write(blob.getContent());
-        }
-            System.out.printf(
-                    "%s",
-                    blobId.toGsUtilUri());
-        */
+
         return blob.getContent();
     }
 }

@@ -7,5 +7,8 @@ import java.util.List;
 
 public interface TaskService {
 
-    void save(TaskDto taskDto);
+    void update(int id);
+
+    List<TaskDto> sinComprimir();
+
 }

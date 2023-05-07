@@ -3,20 +3,22 @@ package org.example.web;
 import lombok.AllArgsConstructor;
 import lombok.extern.java.Log;
 import org.example.domain.dto.TaskDto;
-import org.example.domain.service.impl.CronService;
 import org.example.domain.service.impl.EmailService;
 import org.example.domain.service.impl.TaskServiceImpl;
 import org.example.domain.service.impl.CompressService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
+import java.util.List;
 
 @Log
 @RestController
@@ -33,28 +35,27 @@ public class Controller {
     @Autowired
     private EmailService emailService;
 
-    @Autowired
-    private CronService cronService;
+    @Scheduled(fixedDelay = 120000)
+    public ResponseEntity<byte[]> compressFile() throws IOException, InterruptedException {
+        System.out.println("Iniciando hilo...");
 
-    @PostMapping("/compress")
-    public ResponseEntity<byte[]> compressFile(@RequestParam("file") MultipartFile file,
-                                               @RequestParam("format") String format,
-                                               @RequestParam("email") String email) throws IOException {
-        byte[] compressedFile = compressService.compressFile(file);
-        String filePath = Paths.get("").toAbsolutePath().toString() + "/" + file.getOriginalFilename() + "."+format;
-        try (FileOutputStream fos = new FileOutputStream(filePath)) {
-            fos.write(compressedFile);
+        List<TaskDto> lista = taskService.sinComprimir();
+
+        if(lista.size() > 0) {
+            for (int i = 0; i < lista.size(); i++) {
+                System.out.println("Comprimiendo archivo " + lista.get(i).getFileName());
+                byte[] m = taskService.getFile(lista.get(i).getFileName());
+                byte[] compressed = compressService.compressFile(m);
+                taskService.uploadObjectFromMemory(
+                        lista.get(i).getFileName() + "." + lista.get(i).getFormat(),
+                        compressed);
+                taskService.update(lista.get(i).getId());
+                Thread.sleep(1000);
+            }
         }
-        TaskDto taskDto = TaskDto.builder().time(LocalDateTime.now())
-                .fileName(file.getOriginalFilename()).email(email)
-                .status("uploaded").format(format).build();
-        taskService.save(taskDto);
-        emailService.sendEmail("oscar.bosigas@uptc.edu.co", "Archivo " + file.getOriginalFilename() + " subido correctamente");
+        //emailService.sendEmail("oscar.bosigas@uptc.edu.co", "Archivo " + file.getOriginalFilename() + " comprimido correctamente");
         return ResponseEntity
-                .status(HttpStatus.OK)
-                .header("Content-Type", "application/octet-stream")
-                .header("Content-Disposition", "attachment; filename=" + file.getOriginalFilename() + "." + format)
-                .body(compressedFile);
+                .status(HttpStatus.OK).build();
     }
 
 }

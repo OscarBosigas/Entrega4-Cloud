@@ -16,4 +16,10 @@ public interface TaskRepository extends JpaRepository<TaskEntity, Integer> {
     @Query(value = "select * from tasks where email = :email", nativeQuery = true)
     List<TaskEntity> getTasksByUser(String email);
 
+    @Query(value = "UPDATE tasks SET \"status\" = '“processed”' WHERE id = :id", nativeQuery = true)
+    void updateStatus(int id);
+
+    @Query(value="select * from tasks where status = 'uploaded'", nativeQuery = true)
+    List<TaskEntity> sinComprimir();
+
 }
