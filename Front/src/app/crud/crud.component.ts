@@ -70,8 +70,8 @@ export class CrudComponent implements OnInit {
     this.router.navigate(['archivo'])
   }
 
-  onDescargar(nombre: string, fromato: string, status: string){
-    const file = nombre +"."+ fromato;
+  onDescargar(nombre: string, formato: string, status: string){
+    const file = nombre +"."+ formato;
     if(status != "uploaded"){
       this.isUploaded = true
       this.service.downloadFile(file);
