@@ -74,7 +74,7 @@ export class CrudComponent implements OnInit {
     const file = nombre +"."+ fromato;
     if(status != "uploaded"){
       this.isUploaded = true
-      this.service.downloadFile(nombre);
+      this.service.downloadFile(file);
     }
   }
 }
